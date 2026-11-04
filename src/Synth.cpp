@@ -100,6 +100,7 @@ void Synth::prepare(double sampleRate) {
     sr_ = std::clamp(sampleRate, 8000.0, 192000.0);
     delayL_.assign(static_cast<std::size_t>(sr_*2.0)+1,0.0f);
     delayR_.assign(delayL_.size(),0.0f);
+    crystalL_.prepare(sr_); crystalR_.prepare(sr_);
     reset();
 }
 void Synth::reset() {
@@ -110,6 +111,7 @@ void Synth::reset() {
     chorusPos_=0; chorusPhase_=0.0; delayPos_=0;
     pedal_=false; bend_=0.0f; age_=0; lastVowelKey_=-1.0f;
     beautyL_.reset(); beautyR_.reset(); beautyPhase_=0.0f; beautyCounter_=0;
+    crystalL_.reset(); crystalR_.reset();
     for(auto& f:vowelL_)f.clear();
     for(auto& f:vowelR_)f.clear();
 }
@@ -128,6 +130,8 @@ void Synth::setPatch(const Patch& patch) noexcept {
     patch_.harmonicMix=clampf(patch_.harmonicMix,0.0f,1.0f);
     patch_.vocalBeauty=clampf(patch_.vocalBeauty,0.0f,1.0f);
     patch_.vocalMotion=clampf(patch_.vocalMotion,0.0f,1.0f);
+    patch_.crystalClarity=clampf(patch_.crystalClarity,0.0f,1.0f);
+    patch_.crystalResonance=clampf(patch_.crystalResonance,0.0f,1.0f);
     for(auto& v:voices_) if(v.amp.active()) tune(v);
 }
 void Synth::tune(Voice& v) noexcept {
@@ -201,6 +205,7 @@ void Synth::render(float* left,float* right,std::size_t frames) noexcept {
     const float delayMix=patch_.delay*0.34f;
     const bool hasHarmonics = patch_.engineMode==EngineMode::Harmonic || patch_.engineMode==EngineMode::Fusion;
     const bool hasVocal = patch_.engineMode==EngineMode::Vocal || patch_.engineMode==EngineMode::Fusion;
+    const bool hasCrystal = patch_.engineMode==EngineMode::CrystalClarity;
     const std::size_t delaySamples=std::min(delayL_.size()-1,static_cast<std::size_t>(clampf(patch_.delaySeconds,0.05f,1.8f)*static_cast<float>(sr_)));
     const float vowelHz[5][2]={{760,1200},{530,1780},{310,2200},{570,920},{370,1000}};
     const float vowelKey=static_cast<float>(patch_.vowel);
@@ -267,6 +272,10 @@ void Synth::render(float* left,float* right,std::size_t frames) noexcept {
             r = (1.0f-0.48f*wet)*r + 1.40f*wet*beautyR_.tick(r);
             beautyPhase_ += static_cast<float>(2.0*pi*0.17/sr_);
             if (beautyPhase_ > 2.0f*piF) beautyPhase_ -= 2.0f*piF;
+        }
+        if (hasCrystal) {
+            l=crystalL_.tick(l,patch_.crystalClarity,patch_.crystalResonance);
+            r=crystalR_.tick(r,patch_.crystalClarity,patch_.crystalResonance);
         }
         chorusL_[static_cast<std::size_t>(chorusPos_)]=l;
         chorusR_[static_cast<std::size_t>(chorusPos_)]=r;

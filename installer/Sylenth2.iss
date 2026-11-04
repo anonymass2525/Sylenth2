@@ -1,7 +1,7 @@
 ; Sylenth2 Experimental Windows x64 VST3 installer
 ; Stable AppId and target path allow in-place upgrades across releases.
 #ifndef MyAppVersion
-  #define MyAppVersion "0.1.0"
+  #define MyAppVersion "0.3.0"
 #endif
 #define MyAppName "Sylenth2 Experimental"
 #define VST3Bundle "Sylenth2 Experimental.vst3"

@@ -1,4 +1,4 @@
-name: Windows x64 VST3 + Beauty Engine 0.2
+name: Windows x64 VST3 + Crystal Clarity 0.3
 on:
   push:
     branches: [main]
@@ -21,7 +21,7 @@ jobs:
       - name: Render 8 Original presets
         shell: pwsh
         run: .\build\Release\sylenth2_render.exe .\demos
-      - name: Render Original / Harmonic / Vocal / Fusion comparisons
+      - name: Render five-mode comparisons including Crystal Clarity
         shell: pwsh
         run: .\build\Release\sylenth2_render.exe .\demos-beauty --compare
       - name: Package VST3
@@ -61,7 +61,7 @@ jobs:
       - name: Upload Windows installer, VST3 and all WAV demos
         uses: actions/upload-artifact@v4
         with:
-          name: Sylenth2-v0.2-Windows-x64-Setup-and-Comparisons
+          name: Sylenth2-v0.3-Windows-x64-Setup-and-Comparisons
           path: |
             installer-output/*.exe
             package/**

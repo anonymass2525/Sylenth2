@@ -51,7 +51,7 @@ int main() {
         constexpr int frames=4096;
         std::array<float,frames> original{};
         float previousEnergy=0.0f;
-        for(int mode=0;mode<4;++mode) {
+        for(int mode=0;mode<5;++mode) {
             auto patch=patches[3]; // Midnight Vowel
             patch.engineMode=static_cast<sylenth2::EngineMode>(mode);
             patch.chorus=patch.delay=0.0f;
@@ -79,5 +79,24 @@ int main() {
         }
         assert(previousEnergy>0.0f);
     }
-    std::cout<<"PASS: 8 original presets, 44.1/48/96 kHz, silence, MIDI, finite/stable output\n";
+    // Crystal zero controls must be bit-identical to the legacy Original path.
+    for (double sr:{44100.0,48000.0,96000.0}) {
+        for (const auto& factory:patches) {
+            auto a=factory; a.engineMode=sylenth2::EngineMode::Original;
+            auto b=factory; b.engineMode=sylenth2::EngineMode::CrystalClarity;
+            b.crystalClarity=0.0f; b.crystalResonance=0.0f;
+            sylenth2::Synth x,y; x.prepare(sr); y.prepare(sr);
+            x.setPatch(a); y.setPatch(b);
+            x.noteOn(57,0.8f); y.noteOn(57,0.8f);
+            std::array<float,256> xl{},xr{},yl{},yr{};
+            for (int block=0;block<12;++block) {
+                x.render(xl.data(),xr.data(),xl.size());
+                y.render(yl.data(),yr.data(),xl.size());
+                for (std::size_t i=0;i<xl.size();++i) {
+                    assert(xl[i]==yl[i]); assert(xr[i]==yr[i]);
+                }
+            }
+        }
+    }
+    std::cout<<"PASS: 8 original presets, five modes, 44.1/48/96 kHz, crystal zero-amount identity, stable output\n";
 }

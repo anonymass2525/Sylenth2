@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sylenth2/BeautyEngine.hpp"
+#include "sylenth2/CrystalClarity.hpp"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -48,6 +49,8 @@ struct Patch {
     float harmonicMix = 0.75f;   // 0...1, old core -> harmonic oscillator
     float vocalBeauty = 0.65f;   // 0...1, new 3-formant resonance
     float vocalMotion = 0.40f;   // 0...1, gentle formant movement
+    float crystalClarity = 0.72f; // 0...1, subtle high-band transient polish
+    float crystalResonance = 0.38f; // 0...1, strictly parallel gentle resonance
 };
 
 const std::array<Patch, 8>& factoryPatches();
@@ -132,6 +135,7 @@ private:
     std::array<Bandpass, 2> vowelL_{}, vowelR_{};
     float lastVowelKey_ = -1.0f;
     VocalBeauty beautyL_, beautyR_;
+    CrystalClarity crystalL_, crystalR_;
     float beautyPhase_ = 0.0f;
     unsigned beautyCounter_ = 0;
 };

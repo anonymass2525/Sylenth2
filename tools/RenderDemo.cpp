@@ -42,7 +42,7 @@ int main(int argc,char** argv) {
         int patchNo=0;
         const bool compare=argc>2 && std::string(argv[2])=="--compare";
         for(const auto& original:sylenth2::factoryPatches()) {
-          for(int mode=0;mode<(compare?4:1);++mode) {
+          for(int mode=0;mode<(compare?5:1);++mode) {
             auto patch=original;
             patch.engineMode=static_cast<sylenth2::EngineMode>(mode);
             sylenth2::Synth synth;
@@ -63,7 +63,7 @@ int main(int argc,char** argv) {
             for(auto v:r)peak=std::max(peak,std::abs(v));
             std::string name=patch.name;
             std::replace(name.begin(),name.end(),' ','_');
-            if(compare)name += std::array<const char*,4>{"_Original","_Harmonic","_Vocal","_Fusion"}[static_cast<std::size_t>(mode)];
+            if(compare)name += std::array<const char*,5>{"_Original","_Harmonic","_Vocal","_Fusion","_CrystalClarity"}[static_cast<std::size_t>(mode)];
             const auto file=dir/(name+".wav");
             const float scaling=peak>0.0f ? 0.70794578f/peak : 1.0f; // -3 dBFS peak normalized preview
             for(auto& v:l)v*=scaling;

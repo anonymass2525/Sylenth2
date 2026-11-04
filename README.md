@@ -1,6 +1,6 @@
 # Sylenth2 Experimental — from-scratch VA synthesizer
 
-**Prototype 0.2 / 2026-11-04**
+**Prototype 0.3 / 2026-11-04**
 
 An independently written virtual-analog synthesizer experiment. This repository does **not** incorporate the previous Sylenth2 prototype, Sylenth1 code, or Panoramize source. Its current focus is a clear, crystalline electronic timbre with strong oscillator character.
 
@@ -56,3 +56,7 @@ The eight sounds are new patches created for this engine: Silver Halo, Prism Plu
 **Important:** a passing DSP test is not proof of VST3 loading, pluginval compliance or Studio One operation. PolyBLEP reduces discontinuity aliasing, but triangle and non-linear drive are not yet exhaustively bandlimited; rigorous spectral analysis, oversampling choices, host testing and UI refinement remain pending. Current MIDI/polyphony is intended for experimentation and is not yet a production instrument. The code is provided as original research, not as a claim of a fundamentally novel synthesis algorithm.
 
 Documentation: [Architecture (Japanese)](docs/ARCHITECTURE_JA.md).
+
+## v0.3 Crystal Clarity
+
+New independent fifth mode for conservative high-frequency polish and subtle parallel resonance. The Original path and engine indices 0–3 are unchanged. Crystal Clarity and Transparent Resonance controls default to modest values, and both set to zero yields exact Original output. See [Crystal Clarity design (Japanese)](docs/CRYSTAL_CLARITY_JA.md). Use `sylenth2_render demos-compare --compare` to render 40 comparison WAVs.
