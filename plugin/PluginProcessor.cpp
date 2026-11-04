@@ -47,13 +47,16 @@ public:
         patch.detuneA*=0.35f+1.3f*load("width");
         patch.detuneB*=0.35f+1.3f*load("width");
         patch.drive=std::clamp(patch.drive+load("drive")*0.45f,0.0f,1.0f);
-        patch.engineMode=static_cast<sylenth2::EngineMode>(juce::jlimit(0,4,static_cast<int>(std::lround(load("engine")))));
+        patch.engineMode=static_cast<sylenth2::EngineMode>(juce::jlimit(0,5,static_cast<int>(std::lround(load("engine")))));
         patch.harmonicColor=load("harmonicColor");
         patch.harmonicMix=load("harmonicMix");
         patch.vocalBeauty=load("vocalBeauty");
         patch.vocalMotion=load("vocalMotion");
         patch.crystalClarity=load("crystalClarity");
         patch.crystalResonance=load("crystalResonance");
+        patch.bodyDepth=load("bodyDepth");
+        patch.bodyDensity=load("bodyDensity");
+        patch.bodyDynamics=load("bodyDynamics");
         synth_.setPatch(patch);
         const auto total=buffer.getNumSamples();
         int cursor=0;
@@ -95,13 +98,16 @@ private:
         layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"motion",1},"Motion",0.0f,1.0f,0.5f));
         layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"width",1},"Unison Width",0.0f,1.0f,0.5f));
         layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"drive",1},"Drive",0.0f,1.0f,0.0f));
-        layout.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{"engine",1},"Engine",juce::StringArray{"Original","Harmonic","Vocal","Fusion","Crystal Clarity"},0));
+        layout.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{"engine",1},"Engine",juce::StringArray{"Original","Harmonic","Vocal","Fusion","Crystal Clarity","Crystal Body"},0));
         layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"harmonicColor",1},"Harmonic Color",0.0f,1.0f,0.65f));
         layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"harmonicMix",1},"Harmonic Mix",0.0f,1.0f,0.75f));
         layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"vocalBeauty",1},"Vocal Beauty",0.0f,1.0f,0.65f));
         layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"vocalMotion",1},"Vocal Motion",0.0f,1.0f,0.40f));
         layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"crystalClarity",1},"Crystal Clarity",0.0f,1.0f,0.72f));
         layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"crystalResonance",1},"Transparent Resonance",0.0f,1.0f,0.38f));
+        layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"bodyDepth",1},"Crystal Body Depth",0.0f,1.0f,0.62f));
+        layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"bodyDensity",1},"Harmonic Density",0.0f,1.0f,0.52f));
+        layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"bodyDynamics",1},"Dynamic Transparency",0.0f,1.0f,0.78f));
         return layout;
     }
     sylenth2::Synth synth_;

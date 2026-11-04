@@ -132,6 +132,9 @@ void Synth::setPatch(const Patch& patch) noexcept {
     patch_.vocalMotion=clampf(patch_.vocalMotion,0.0f,1.0f);
     patch_.crystalClarity=clampf(patch_.crystalClarity,0.0f,1.0f);
     patch_.crystalResonance=clampf(patch_.crystalResonance,0.0f,1.0f);
+    patch_.bodyDepth=clampf(patch_.bodyDepth,0.0f,1.0f);
+    patch_.bodyDensity=clampf(patch_.bodyDensity,0.0f,1.0f);
+    patch_.bodyDynamics=clampf(patch_.bodyDynamics,0.0f,1.0f);
     for(auto& v:voices_) if(v.amp.active()) tune(v);
 }
 void Synth::tune(Voice& v) noexcept {
@@ -151,6 +154,7 @@ void Synth::tune(Voice& v) noexcept {
     setup(v.a,patch_.unisonA,patch_.detuneA,0.0f);
     setup(v.b,patch_.unisonB,patch_.detuneB,patch_.octaveB);
     v.harmonic.configure(base,sr_,patch_.harmonicColor);
+    if (patch_.engineMode == EngineMode::CrystalBody) v.body.configure(base,sr_);
 }
 void Synth::noteOn(int midiNote,float velocity) noexcept {
     if(midiNote<0 || midiNote>127 || velocity<=0) { if(velocity<=0)noteOff(midiNote); return; }
@@ -170,6 +174,8 @@ void Synth::noteOn(int midiNote,float velocity) noexcept {
         dest->b[i].phase=fract(0.1103f*midiNote+0.1297f*i+0.37f);
     }
     dest->harmonic.phase=dest->a[0].phase;
+    // Previous voice was value-initialized; body starts at zero on every note.
+    if (patch_.engineMode == EngineMode::CrystalBody) dest->body.reset();
 }
 void Synth::noteOff(int midiNote) noexcept {
     for(auto& v:voices_) if(v.note==midiNote && v.amp.active() && v.amp.stage!=EnvStage::Release) {
@@ -205,7 +211,8 @@ void Synth::render(float* left,float* right,std::size_t frames) noexcept {
     const float delayMix=patch_.delay*0.34f;
     const bool hasHarmonics = patch_.engineMode==EngineMode::Harmonic || patch_.engineMode==EngineMode::Fusion;
     const bool hasVocal = patch_.engineMode==EngineMode::Vocal || patch_.engineMode==EngineMode::Fusion;
-    const bool hasCrystal = patch_.engineMode==EngineMode::CrystalClarity;
+    const bool hasBody = patch_.engineMode==EngineMode::CrystalBody;
+    const bool hasCrystal = patch_.engineMode==EngineMode::CrystalClarity || hasBody;
     const std::size_t delaySamples=std::min(delayL_.size()-1,static_cast<std::size_t>(clampf(patch_.delaySeconds,0.05f,1.8f)*static_cast<float>(sr_)));
     const float vowelHz[5][2]={{760,1200},{530,1780},{310,2200},{570,920},{370,1000}};
     const float vowelKey=static_cast<float>(patch_.vowel);
@@ -252,8 +259,11 @@ void Synth::render(float* left,float* right,std::size_t frames) noexcept {
                 xL=std::tanh(xL*amount)*norm;
                 xR=std::tanh(xR*amount)*norm;
             }
-            l+=v.filterL.tick(xL)*amp*v.velocity*fScale;
-            r+=v.filterR.tick(xR)*amp*v.velocity*fScale;
+            float voiceL=v.filterL.tick(xL);
+            float voiceR=v.filterR.tick(xR);
+            if (hasBody) v.body.tick(voiceL,voiceR,patch_.bodyDepth,patch_.bodyDensity,patch_.bodyDynamics);
+            l+=voiceL*amp*v.velocity*fScale;
+            r+=voiceR*amp*v.velocity*fScale;
         }
         const float formant=patch_.formant;
         if(!hasVocal && formant>0.0001f){

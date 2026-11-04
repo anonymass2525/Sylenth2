@@ -51,7 +51,7 @@ int main() {
         constexpr int frames=4096;
         std::array<float,frames> original{};
         float previousEnergy=0.0f;
-        for(int mode=0;mode<5;++mode) {
+        for(int mode=0;mode<6;++mode) {
             auto patch=patches[3]; // Midnight Vowel
             patch.engineMode=static_cast<sylenth2::EngineMode>(mode);
             patch.chorus=patch.delay=0.0f;
@@ -98,5 +98,41 @@ int main() {
             }
         }
     }
-    std::cout<<"PASS: 8 original presets, five modes, 44.1/48/96 kHz, crystal zero-amount identity, stable output\n";
+    // v0.4: bypass must be bit-exact when all new processing gains are zero.
+    for(double sr:{44100.0,48000.0,96000.0,192000.0}) {
+        for(const auto& preset:patches) {
+            auto original=preset; original.engineMode=sylenth2::EngineMode::Original;
+            auto bypass=preset; bypass.engineMode=sylenth2::EngineMode::CrystalBody;
+            bypass.crystalClarity=bypass.crystalResonance=0.0f;
+            bypass.bodyDepth=bypass.bodyDensity=bypass.bodyDynamics=0.0f;
+            sylenth2::Synth a,b; a.prepare(sr); b.prepare(sr);
+            a.setPatch(original); b.setPatch(bypass);
+            a.noteOn(55,0.81f); b.noteOn(55,0.81f);
+            a.noteOn(62,0.63f); b.noteOn(62,0.63f);
+            std::array<float,128> al{},ar{},bl{},br{};
+            for(int block=0;block<18;++block) {
+                a.render(al.data(),ar.data(),al.size());
+                b.render(bl.data(),br.data(),bl.size());
+                for(int i=0;i<128;++i) { assert(al[i]==bl[i]); assert(ar[i]==br[i]); }
+            }
+        }
+    }
+    // v0.4: enabled body must differ from the old Crystal Clarity mode.
+    for(double sr:{44100.0,48000.0,96000.0,192000.0}) {
+        auto original=patches[0]; original.engineMode=sylenth2::EngineMode::CrystalClarity;
+        auto thick=original; thick.engineMode=sylenth2::EngineMode::CrystalBody;
+        sylenth2::Synth a,b; a.prepare(sr); b.prepare(sr);
+        a.setPatch(original); b.setPatch(thick);
+        a.noteOn(60,0.75f); b.noteOn(60,0.75f);
+        std::array<float,4096> al{},ar{},bl{},br{};
+        a.render(al.data(),ar.data(),al.size()); b.render(bl.data(),br.data(),bl.size());
+        double diff=0.0;
+        for(std::size_t i=0;i<al.size();++i) {
+            assert(std::isfinite(bl[i]) && std::isfinite(br[i]));
+            diff+=std::abs(static_cast<double>(al[i])-bl[i]);
+            assert(std::abs(bl[i])<20.0f && std::abs(br[i])<20.0f);
+        }
+        assert(diff>0.0001);
+    }
+    std::cout<<"PASS: six modes, Original identity and Crystal Body effect, 44.1/48/96/192 kHz, stable output\n";
 }

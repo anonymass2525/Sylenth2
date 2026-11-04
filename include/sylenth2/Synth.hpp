@@ -2,6 +2,7 @@
 
 #include "sylenth2/BeautyEngine.hpp"
 #include "sylenth2/CrystalClarity.hpp"
+#include "sylenth2/CrystalBody.hpp"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -50,6 +51,9 @@ struct Patch {
     float vocalBeauty = 0.65f;   // 0...1, new 3-formant resonance
     float vocalMotion = 0.40f;   // 0...1, gentle formant movement
     float crystalClarity = 0.72f; // 0...1, subtle high-band transient polish
+    float bodyDepth = 0.62f;      // 0...1, parallel fundamental body strength
+    float bodyDensity = 0.52f;    // 0...1, relative second-harmonic body
+    float bodyDynamics = 0.78f;   // 0...1, protect initial transients
     float crystalResonance = 0.38f; // 0...1, strictly parallel gentle resonance
 };
 
@@ -106,6 +110,7 @@ private:
         Filter filterL, filterR;
         std::array<Lane, maxUnison> a{}, b{};
         HarmonicVoice harmonic;
+        CrystalBodyVoice body;
         int filterCounter = 0;
     };
     struct Bandpass {

@@ -64,3 +64,7 @@ New independent fifth mode for conservative high-frequency polish and subtle par
 ## v0.3.1 Installer-only hotfix
 
 Same Crystal Clarity audio DSP as v0.3.0. Inno Setup now uses restartreplace for VST3 files locked by Studio One or other hosts, prompting for a Windows restart if required. See [Japanese update troubleshooting](docs/INSTALL_TROUBLESHOOTING_JA.md). Always close the DAW before updating. This does not bypass permissions or security software.
+
+## v0.4 Crystal Body
+
+Adds a sixth selectable engine with note-tracked fundamental/second-partial parallel reinforcement and attack transient protection, followed by the unchanged v0.3 Crystal Clarity. Earlier five engine modes, IDs, and audio behavior are preserved. New controls: Crystal Body Depth, Harmonic Density, Dynamic Transparency. Render all 6 modes using `sylenth2_render demos-compare --compare` or the focused five-way ablation with `sylenth2_render demos-study --study`. See [v0.4 Japanese DSP notes](docs/CRYSTAL_BODY_JA.md). Installer retains v0.3.1 locked-file `restartreplace` behavior.

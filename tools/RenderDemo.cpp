@@ -41,10 +41,17 @@ int main(int argc,char** argv) {
         const int notes[]={60,64,67,72,67,64,60};
         int patchNo=0;
         const bool compare=argc>2 && std::string(argv[2])=="--compare";
+        const bool study=argc>2 && std::string(argv[2])=="--study";
         for(const auto& original:sylenth2::factoryPatches()) {
-          for(int mode=0;mode<(compare?5:1);++mode) {
+          for(int mode=0;mode<(compare?6:(study?5:1));++mode) {
             auto patch=original;
-            patch.engineMode=static_cast<sylenth2::EngineMode>(mode);
+            if (study) {
+                if (mode==0) patch.engineMode=sylenth2::EngineMode::Original;
+                if (mode==1) patch.engineMode=sylenth2::EngineMode::CrystalClarity;
+                if (mode==2) { patch.engineMode=sylenth2::EngineMode::CrystalClarity; patch.crystalResonance=0.0f; }
+                if (mode==3) { patch.engineMode=sylenth2::EngineMode::CrystalClarity; patch.crystalClarity=0.0f; }
+                if (mode==4) patch.engineMode=sylenth2::EngineMode::CrystalBody;
+            } else patch.engineMode=static_cast<sylenth2::EngineMode>(mode);
             sylenth2::Synth synth;
             synth.prepare(sr);
             synth.setPatch(patch);
@@ -63,7 +70,8 @@ int main(int argc,char** argv) {
             for(auto v:r)peak=std::max(peak,std::abs(v));
             std::string name=patch.name;
             std::replace(name.begin(),name.end(),' ','_');
-            if(compare)name += std::array<const char*,5>{"_Original","_Harmonic","_Vocal","_Fusion","_CrystalClarity"}[static_cast<std::size_t>(mode)];
+            if(compare)name += std::array<const char*,6>{"_Original","_Harmonic","_Vocal","_Fusion","_CrystalClarity","_CrystalBody"}[static_cast<std::size_t>(mode)];
+            if(study)name += std::array<const char*,5>{"_Original","_CrystalClarity","_ClarityOnly","_ResonanceOnly","_CrystalBody"}[static_cast<std::size_t>(mode)];
             const auto file=dir/(name+".wav");
             const float scaling=peak>0.0f ? 0.70794578f/peak : 1.0f; // -3 dBFS peak normalized preview
             for(auto& v:l)v*=scaling;

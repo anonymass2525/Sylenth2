@@ -1,4 +1,4 @@
-name: Windows x64 VST3 + Crystal Clarity 0.3.1 (installer hotfix)
+name: Windows x64 VST3 + Crystal Body 0.4
 on:
   push:
     branches: [main]
@@ -21,9 +21,12 @@ jobs:
       - name: Render 8 Original presets
         shell: pwsh
         run: .\build\Release\sylenth2_render.exe .\demos
-      - name: Render five-mode comparisons including Crystal Clarity
+      - name: Render all six engine modes including Crystal Body
         shell: pwsh
         run: .\build\Release\sylenth2_render.exe .\demos-beauty --compare
+      - name: Render v0.4 5-way transparent-body studies
+        shell: pwsh
+        run: .\build\Release\sylenth2_render.exe .\demos-study --study
       - name: Package VST3
         shell: pwsh
         run: |
@@ -61,10 +64,11 @@ jobs:
       - name: Upload Windows installer, VST3 and all WAV demos
         uses: actions/upload-artifact@v4
         with:
-          name: Sylenth2-v0.3.1-Windows-x64-Setup-and-Comparisons
+          name: Sylenth2-v0.4-Windows-x64-Setup-and-Comparisons
           path: |
             installer-output/*.exe
             package/**
             demos/*.wav
             demos-beauty/*.wav
+            demos-study/*.wav
           retention-days: 90
