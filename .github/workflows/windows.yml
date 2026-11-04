@@ -1,0 +1,38 @@
+name: Windows x64 VST3 + DSP tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DSYLENTH2_BUILD_PLUGIN=ON
+      - name: Build Release
+        run: cmake --build build --config Release --parallel 4
+      - name: DSP tests
+        run: ctest --test-dir build -C Release --output-on-failure
+      - name: Render original demo presets
+        shell: pwsh
+        run: .\build\Release\sylenth2_render.exe .\demos
+      - name: Package VST3
+        shell: pwsh
+        run: |
+          $bundle = Get-ChildItem -Path build -Filter "*.vst3" -Directory -Recurse | Select-Object -First 1
+          if (-not $bundle) { throw "No VST3 bundle found" }
+          New-Item -ItemType Directory -Force -Path package | Out-Null
+          Copy-Item -Path $bundle.FullName -Destination package -Recurse
+      - name: Upload VST3 and WAV demos
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sylenth2-v0.1-Windows-x64-VST3-and-demos
+          path: |
+            package/**
+            demos/*.wav
+          retention-days: 90

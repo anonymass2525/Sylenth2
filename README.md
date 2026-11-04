@@ -29,7 +29,7 @@ ctest --test-dir build -C Release --output-on-failure
 
 ## Windows VST3 build
 
-Install Visual Studio 2022 with C++ Desktop Development, CMake and Git. Network access to fetch JUCE 8.0.10 is required on first CMake configure.
+Install Visual Studio 2022 with C++ Desktop Development, CMake and Git. Network access to fetch JUCE 8.0.17-security is required on first CMake configure.
 
 ```powershell
 cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DSYLENTH2_BUILD_PLUGIN=ON
