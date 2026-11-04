@@ -1,4 +1,4 @@
-name: Windows x64 VST3 + DSP tests
+name: Windows x64 VST3 + Beauty Engine 0.2
 on:
   push:
     branches: [main]
@@ -16,11 +16,14 @@ jobs:
         run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DSYLENTH2_BUILD_PLUGIN=ON
       - name: Build Release
         run: cmake --build build --config Release --parallel 4
-      - name: DSP tests
+      - name: DSP tests (assertions enabled even in Release)
         run: ctest --test-dir build -C Release --output-on-failure
-      - name: Render original demo presets
+      - name: Render 8 Original presets
         shell: pwsh
         run: .\build\Release\sylenth2_render.exe .\demos
+      - name: Render Original / Harmonic / Vocal / Fusion comparisons
+        shell: pwsh
+        run: .\build\Release\sylenth2_render.exe .\demos-beauty --compare
       - name: Package VST3
         shell: pwsh
         run: |
@@ -33,40 +36,35 @@ jobs:
         run: |
           $bundle = Get-ChildItem -Path build -Filter "*.vst3" -Directory -Recurse | Select-Object -First 1
           if (-not $bundle) { throw "VST3 bundle missing" }
-          if ($bundle.Name -ne "Sylenth2 Experimental.vst3") {
-            throw "Unexpected VST3 bundle name: $($bundle.Name)"
-          }
+          if ($bundle.Name -ne "Sylenth2 Experimental.vst3") { throw "Unexpected VST3 bundle name: $($bundle.Name)" }
           New-Item -ItemType Directory -Force -Path installer-payload | Out-Null
           Copy-Item -Path $bundle.FullName -Destination installer-payload -Recurse -Force
-          if (-not (Test-Path "installer-payload/Sylenth2 Experimental.vst3")) {
-            throw "Installer payload could not be staged"
-          }
       - name: Install Inno Setup compiler
         shell: pwsh
         run: |
-          $compiler = "${env:ProgramFiles(x86)}\\Inno Setup 6\\ISCC.exe"
-          if (-not (Test-Path $compiler)) {
-            choco install innosetup --yes --no-progress
-          }
+          $compiler = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $compiler)) { choco install innosetup --yes --no-progress }
           if (-not (Test-Path $compiler)) { throw "ISCC.exe not found" }
-      - name: Build Windows setup EXE
+      - name: Build Windows Setup EXE
         shell: pwsh
         run: |
-          $compiler = "${env:ProgramFiles(x86)}\\Inno Setup 6\\ISCC.exe"
-          $match = Select-String -Path CMakeLists.txt -Pattern '^project\\(Sylenth2 VERSION ([0-9]+\\.[0-9]+\\.[0-9]+)'
+          $compiler = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          $match = Select-String -Path CMakeLists.txt -Pattern '^project\(Sylenth2 VERSION ([0-9]+\.[0-9]+\.[0-9]+)'
           if (-not $match) { throw "Could not extract version from CMake" }
           $version = $match.Matches[0].Groups[1].Value
           & $compiler "/DMyAppVersion=$version" "installer/Sylenth2.iss"
           if ($LASTEXITCODE -ne 0) { throw "Inno Setup compilation failed: $LASTEXITCODE" }
+          if (-not (Test-Path installer-output)) { throw "Installer output folder missing" }
           $setup = Get-ChildItem installer-output -Filter '*-Setup.exe' | Select-Object -First 1
           if (-not $setup) { throw "Installer EXE not created" }
           Write-Host "Created: $($setup.Name)"
-      - name: Upload VST3 and WAV demos
+      - name: Upload Windows installer, VST3 and all WAV demos
         uses: actions/upload-artifact@v4
         with:
-          name: Sylenth2-Windows-x64-Installer-VST3-and-demos
+          name: Sylenth2-v0.2-Windows-x64-Setup-and-Comparisons
           path: |
             installer-output/*.exe
             package/**
             demos/*.wav
+            demos-beauty/*.wav
           retention-days: 90

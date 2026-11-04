@@ -109,6 +109,7 @@ void Synth::reset() {
     std::fill(delayR_.begin(),delayR_.end(),0.0f);
     chorusPos_=0; chorusPhase_=0.0; delayPos_=0;
     pedal_=false; bend_=0.0f; age_=0; lastVowelKey_=-1.0f;
+    beautyL_.reset(); beautyR_.reset(); beautyPhase_=0.0f; beautyCounter_=0;
     for(auto& f:vowelL_)f.clear();
     for(auto& f:vowelR_)f.clear();
 }
@@ -123,6 +124,10 @@ void Synth::setPatch(const Patch& patch) noexcept {
     patch_.formant=clampf(patch_.formant,0.0f,1.0f);
     patch_.vowel=std::clamp(patch_.vowel,0,4);
     patch_.delayFeedback=clampf(patch_.delayFeedback,0.0f,0.85f);
+    patch_.harmonicColor=clampf(patch_.harmonicColor,0.0f,1.0f);
+    patch_.harmonicMix=clampf(patch_.harmonicMix,0.0f,1.0f);
+    patch_.vocalBeauty=clampf(patch_.vocalBeauty,0.0f,1.0f);
+    patch_.vocalMotion=clampf(patch_.vocalMotion,0.0f,1.0f);
     for(auto& v:voices_) if(v.amp.active()) tune(v);
 }
 void Synth::tune(Voice& v) noexcept {
@@ -141,6 +146,7 @@ void Synth::tune(Voice& v) noexcept {
     };
     setup(v.a,patch_.unisonA,patch_.detuneA,0.0f);
     setup(v.b,patch_.unisonB,patch_.detuneB,patch_.octaveB);
+    v.harmonic.configure(base,sr_,patch_.harmonicColor);
 }
 void Synth::noteOn(int midiNote,float velocity) noexcept {
     if(midiNote<0 || midiNote>127 || velocity<=0) { if(velocity<=0)noteOff(midiNote); return; }
@@ -159,6 +165,7 @@ void Synth::noteOn(int midiNote,float velocity) noexcept {
         dest->a[i].phase=fract(0.0789f*midiNote+0.1731f*i);
         dest->b[i].phase=fract(0.1103f*midiNote+0.1297f*i+0.37f);
     }
+    dest->harmonic.phase=dest->a[0].phase;
 }
 void Synth::noteOff(int midiNote) noexcept {
     for(auto& v:voices_) if(v.note==midiNote && v.amp.active() && v.amp.stage!=EnvStage::Release) {
@@ -192,6 +199,8 @@ void Synth::render(float* left,float* right,std::size_t frames) noexcept {
     const float drive=clampf(patch_.drive,0,1);
     const float chorusMix=patch_.chorus*0.38f;
     const float delayMix=patch_.delay*0.34f;
+    const bool hasHarmonics = patch_.engineMode==EngineMode::Harmonic || patch_.engineMode==EngineMode::Fusion;
+    const bool hasVocal = patch_.engineMode==EngineMode::Vocal || patch_.engineMode==EngineMode::Fusion;
     const std::size_t delaySamples=std::min(delayL_.size()-1,static_cast<std::size_t>(clampf(patch_.delaySeconds,0.05f,1.8f)*static_cast<float>(sr_)));
     const float vowelHz[5][2]={{760,1200},{530,1780},{310,2200},{570,920},{370,1000}};
     const float vowelKey=static_cast<float>(patch_.vowel);
@@ -226,6 +235,12 @@ void Synth::render(float* left,float* right,std::size_t frames) noexcept {
             };
             add(v.a,patch_.unisonA,patch_.levelA,patch_.waveA);
             add(v.b,patch_.unisonB,patch_.levelB,patch_.waveB);
+            if (hasHarmonics) {
+                const float blend = patch_.harmonicMix;
+                const float add = v.harmonic.tick(fenv) * 0.70710678f;
+                xL = (1.0f-blend)*xL + blend*add;
+                xR = (1.0f-blend)*xR + blend*add;
+            }
             if(drive>0.0001f){
                 const float amount=1.0f+4.0f*drive;
                 const float norm=1.0f/std::tanh(amount);
@@ -236,11 +251,22 @@ void Synth::render(float* left,float* right,std::size_t frames) noexcept {
             r+=v.filterR.tick(xR)*amp*v.velocity*fScale;
         }
         const float formant=patch_.formant;
-        if(formant>0.0001f){
+        if(!hasVocal && formant>0.0001f){
             const float fl=vowelL_[0].tick(l)+0.80f*vowelL_[1].tick(l);
             const float fr=vowelR_[0].tick(r)+0.80f*vowelR_[1].tick(r);
             l=(1.0f-formant*0.5f)*l+formant*1.6f*fl;
             r=(1.0f-formant*0.5f)*r+formant*1.6f*fr;
+        }
+        if (hasVocal) {
+            if ((beautyCounter_++ & 127u)==0u) {
+                beautyL_.configure(patch_.vowel,sr_,patch_.vocalMotion,beautyPhase_);
+                beautyR_.configure(patch_.vowel,sr_,patch_.vocalMotion,beautyPhase_);
+            }
+            const float wet = 0.76f*patch_.vocalBeauty;
+            l = (1.0f-0.48f*wet)*l + 1.40f*wet*beautyL_.tick(l);
+            r = (1.0f-0.48f*wet)*r + 1.40f*wet*beautyR_.tick(r);
+            beautyPhase_ += static_cast<float>(2.0*pi*0.17/sr_);
+            if (beautyPhase_ > 2.0f*piF) beautyPhase_ -= 2.0f*piF;
         }
         chorusL_[static_cast<std::size_t>(chorusPos_)]=l;
         chorusR_[static_cast<std::size_t>(chorusPos_)]=r;

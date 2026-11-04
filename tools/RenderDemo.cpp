@@ -1,5 +1,6 @@
 #include "sylenth2/Synth.hpp"
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <filesystem>
@@ -39,7 +40,11 @@ int main(int argc,char** argv) {
         constexpr int length=6*sr;
         const int notes[]={60,64,67,72,67,64,60};
         int patchNo=0;
-        for(const auto& patch:sylenth2::factoryPatches()) {
+        const bool compare=argc>2 && std::string(argv[2])=="--compare";
+        for(const auto& original:sylenth2::factoryPatches()) {
+          for(int mode=0;mode<(compare?4:1);++mode) {
+            auto patch=original;
+            patch.engineMode=static_cast<sylenth2::EngineMode>(mode);
             sylenth2::Synth synth;
             synth.prepare(sr);
             synth.setPatch(patch);
@@ -58,6 +63,7 @@ int main(int argc,char** argv) {
             for(auto v:r)peak=std::max(peak,std::abs(v));
             std::string name=patch.name;
             std::replace(name.begin(),name.end(),' ','_');
+            if(compare)name += std::array<const char*,4>{"_Original","_Harmonic","_Vocal","_Fusion"}[static_cast<std::size_t>(mode)];
             const auto file=dir/(name+".wav");
             const float scaling=peak>0.0f ? 0.70794578f/peak : 1.0f; // -3 dBFS peak normalized preview
             for(auto& v:l)v*=scaling;
@@ -67,6 +73,7 @@ int main(int argc,char** argv) {
             if(!std::isfinite(peak) || peak<=0.0f) {
                 std::cerr<<"ERROR: invalid or silent demo.\n"; return 2;
             }
+          }
         }
     } catch(const std::exception& ex) {std::cerr<<ex.what()<<'\n';return 1;}
 }

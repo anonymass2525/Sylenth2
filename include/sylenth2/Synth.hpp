@@ -1,5 +1,6 @@
 #pragma once
 
+#include "sylenth2/BeautyEngine.hpp"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -42,6 +43,11 @@ struct Patch {
     float formant = 0.0f;         // 0...1
     int vowel = 0;                // A,E,I,O,U
     float gain = 0.68f;
+    EngineMode engineMode = EngineMode::Original; // never changes the eight 0.1 presets
+    float harmonicColor = 0.65f; // 0...1, spectral slope + partial emphasis
+    float harmonicMix = 0.75f;   // 0...1, old core -> harmonic oscillator
+    float vocalBeauty = 0.65f;   // 0...1, new 3-formant resonance
+    float vocalMotion = 0.40f;   // 0...1, gentle formant movement
 };
 
 const std::array<Patch, 8>& factoryPatches();
@@ -96,6 +102,7 @@ private:
         Envelope amp, filterEnv;
         Filter filterL, filterR;
         std::array<Lane, maxUnison> a{}, b{};
+        HarmonicVoice harmonic;
         int filterCounter = 0;
     };
     struct Bandpass {
@@ -124,5 +131,8 @@ private:
     std::size_t delayPos_ = 0;
     std::array<Bandpass, 2> vowelL_{}, vowelR_{};
     float lastVowelKey_ = -1.0f;
+    VocalBeauty beautyL_, beautyR_;
+    float beautyPhase_ = 0.0f;
+    unsigned beautyCounter_ = 0;
 };
 } // namespace sylenth2

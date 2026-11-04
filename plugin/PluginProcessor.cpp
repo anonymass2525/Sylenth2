@@ -47,6 +47,11 @@ public:
         patch.detuneA*=0.35f+1.3f*load("width");
         patch.detuneB*=0.35f+1.3f*load("width");
         patch.drive=std::clamp(patch.drive+load("drive")*0.45f,0.0f,1.0f);
+        patch.engineMode=static_cast<sylenth2::EngineMode>(juce::jlimit(0,3,static_cast<int>(std::lround(load("engine")))));
+        patch.harmonicColor=load("harmonicColor");
+        patch.harmonicMix=load("harmonicMix");
+        patch.vocalBeauty=load("vocalBeauty");
+        patch.vocalMotion=load("vocalMotion");
         synth_.setPatch(patch);
         const auto total=buffer.getNumSamples();
         int cursor=0;
@@ -88,6 +93,11 @@ private:
         layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"motion",1},"Motion",0.0f,1.0f,0.5f));
         layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"width",1},"Unison Width",0.0f,1.0f,0.5f));
         layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"drive",1},"Drive",0.0f,1.0f,0.0f));
+        layout.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{"engine",1},"Engine",juce::StringArray{"Original","Harmonic","Vocal","Fusion"},0));
+        layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"harmonicColor",1},"Harmonic Color",0.0f,1.0f,0.65f));
+        layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"harmonicMix",1},"Harmonic Mix",0.0f,1.0f,0.75f));
+        layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"vocalBeauty",1},"Vocal Beauty",0.0f,1.0f,0.65f));
+        layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"vocalMotion",1},"Vocal Motion",0.0f,1.0f,0.40f));
         return layout;
     }
     sylenth2::Synth synth_;

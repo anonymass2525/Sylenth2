@@ -1,10 +1,19 @@
 # Sylenth2 Experimental — from-scratch VA synthesizer
 
-**Prototype 0.1 / 2026-11-04**
+**Prototype 0.2 / 2026-11-04**
 
 An independently written virtual-analog synthesizer experiment. This repository does **not** incorporate the previous Sylenth2 prototype, Sylenth1 code, or Panoramize source. Its current focus is a clear, crystalline electronic timbre with strong oscillator character.
 
 > **Unofficial project / working title.** Not affiliated with, endorsed by, or a successor to LennarDigital / Sylenth1. Consider renaming before distributing a commercial product; the working title may create trademark confusion.
+
+## Beauty engine modes (v0.2)
+
+The original v0.1 engine and its **eight unmodified factory patches** remain the default.
+The generic JUCE editor adds an Engine choice: **Original / Harmonic / Vocal / Fusion**.
+Harmonic adds a separate 20-partial Nyquist-limited oscillator with spectral slope/glow and attack-dependent brightness.
+Vocal adds a separate three-band moving formant network. Fusion combines both.
+These are experimental algorithms, not claims of universally better sound; compare with the Original at matched levels.
+`./build/sylenth2_render demos-beauty --compare` renders all four engines for the same eight factory patches.
 
 ## What's implemented
 
