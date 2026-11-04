@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(Sylenth2 VERSION 0.3.0 LANGUAGES C CXX)
+project(Sylenth2 VERSION 0.3.1 LANGUAGES C CXX)
 
 option(SYLENTH2_BUILD_PLUGIN "Build JUCE VST3" OFF)
 option(SYLENTH2_BUILD_TOOLS "Build offline renderer" ON)

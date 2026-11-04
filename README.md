@@ -60,3 +60,7 @@ Documentation: [Architecture (Japanese)](docs/ARCHITECTURE_JA.md).
 ## v0.3 Crystal Clarity
 
 New independent fifth mode for conservative high-frequency polish and subtle parallel resonance. The Original path and engine indices 0–3 are unchanged. Crystal Clarity and Transparent Resonance controls default to modest values, and both set to zero yields exact Original output. See [Crystal Clarity design (Japanese)](docs/CRYSTAL_CLARITY_JA.md). Use `sylenth2_render demos-compare --compare` to render 40 comparison WAVs.
+
+## v0.3.1 Installer-only hotfix
+
+Same Crystal Clarity audio DSP as v0.3.0. Inno Setup now uses restartreplace for VST3 files locked by Studio One or other hosts, prompting for a Windows restart if required. See [Japanese update troubleshooting](docs/INSTALL_TROUBLESHOOTING_JA.md). Always close the DAW before updating. This does not bypass permissions or security software.

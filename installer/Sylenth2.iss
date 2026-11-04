@@ -1,7 +1,8 @@
 ; Sylenth2 Experimental Windows x64 VST3 installer
 ; Stable AppId and target path allow in-place upgrades across releases.
+; Locked VST3 modules are scheduled for replacement on reboot (restartreplace).
 #ifndef MyAppVersion
-  #define MyAppVersion "0.3.0"
+  #define MyAppVersion "0.3.1"
 #endif
 #define MyAppName "Sylenth2 Experimental"
 #define VST3Bundle "Sylenth2 Experimental.vst3"
@@ -32,7 +33,7 @@ VersionInfoVersion={#MyAppVersion}.0
 
 [Files]
 ; Copy complete VST3 bundle preserving Contents/x86_64-win/... structure.
-Source: "..\installer-payload\{#VST3Bundle}\*"; DestDir: "{commoncf64}\VST3\{#VST3Bundle}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\installer-payload\{#VST3Bundle}\*"; DestDir: "{commoncf64}\VST3\{#VST3Bundle}"; Flags: ignoreversion recursesubdirs createallsubdirs restartreplace
 
 [Messages]
 WelcomeLabel2=This installer places the VST3 synthesizer in the standard Windows VST3 folder.%n%nPlease close Studio One and any other DAW before continuing.

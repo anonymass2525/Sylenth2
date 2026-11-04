@@ -1,4 +1,4 @@
-name: Windows x64 VST3 + Crystal Clarity 0.3
+name: Windows x64 VST3 + Crystal Clarity 0.3.1 (installer hotfix)
 on:
   push:
     branches: [main]
@@ -61,7 +61,7 @@ jobs:
       - name: Upload Windows installer, VST3 and all WAV demos
         uses: actions/upload-artifact@v4
         with:
-          name: Sylenth2-v0.3-Windows-x64-Setup-and-Comparisons
+          name: Sylenth2-v0.3.1-Windows-x64-Setup-and-Comparisons
           path: |
             installer-output/*.exe
             package/**
