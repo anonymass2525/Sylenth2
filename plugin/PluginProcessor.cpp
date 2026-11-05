@@ -10,7 +10,7 @@ public:
         : juce::AudioProcessor(BusesProperties().withOutput("Stereo Output",juce::AudioChannelSet::stereo(),true)),
           params_(*this,nullptr,"PARAMETERS",makeLayout()) {}
 
-    const juce::String getName() const override {return "Sylenth2 Experimental";}
+    const juce::String getName() const override {return "Crystal typeGPT 0.4.1";}
     bool acceptsMidi() const override {return true;}
     bool producesMidi() const override {return false;}
     bool isMidiEffect() const override {return false;}
@@ -98,7 +98,7 @@ private:
         layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"motion",1},"Motion",0.0f,1.0f,0.5f));
         layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"width",1},"Unison Width",0.0f,1.0f,0.5f));
         layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"drive",1},"Drive",0.0f,1.0f,0.0f));
-        layout.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{"engine",1},"Engine",juce::StringArray{"Original","Harmonic","Vocal","Fusion","Crystal Clarity","Crystal Body"},0));
+        layout.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{"engine",1},"Engine",juce::StringArray{"Original","Harmonic","Vocal","Fusion","Crystal Clarity","Crystal Body"},5));
         layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"harmonicColor",1},"Harmonic Color",0.0f,1.0f,0.65f));
         layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"harmonicMix",1},"Harmonic Mix",0.0f,1.0f,0.75f));
         layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"vocalBeauty",1},"Vocal Beauty",0.0f,1.0f,0.65f));

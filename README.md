@@ -1,10 +1,10 @@
-# Sylenth2 Experimental — from-scratch VA synthesizer
+# Crystal — Electronic Beauty Synthesizer (typeGPT research edition)
 
-**Prototype 0.3 / 2026-11-04**
+**Crystal v0.4.1 — identity transition (DSP unchanged from v0.4.0)**
 
-An independently written virtual-analog synthesizer experiment. This repository does **not** incorporate the previous Sylenth2 prototype, Sylenth1 code, or Panoramize source. Its current focus is a clear, crystalline electronic timbre with strong oscillator character.
+An independently written virtual-analog synthesizer experiment. **Sound signature: transparent, pure, clear, and harmonically full without becoming muddy.** This repository does **not** incorporate the previous Sylenth2 prototype, Sylenth1 code, or Panoramize source. Its current focus is a clear, crystalline electronic timbre with strong oscillator character.
 
-> **Unofficial project / working title.** Not affiliated with, endorsed by, or a successor to LennarDigital / Sylenth1. Consider renaming before distributing a commercial product; the working title may create trademark confusion.
+> **Research name.** Crystal is also the name of the established Green Oak Software synthesizer. This independent research project is not affiliated with Green Oak, and uses the distinguishing development label **Crystal typeGPT** on the VST3 and Windows installer. Review branding and trademark clearance before public/commercial release. Historic code namespace and GitHub repository slug remain `sylenth2` to preserve source history.
 
 ## Beauty engine modes (v0.2)
 
@@ -68,3 +68,7 @@ Same Crystal Clarity audio DSP as v0.3.0. Inno Setup now uses restartreplace for
 ## v0.4 Crystal Body
 
 Adds a sixth selectable engine with note-tracked fundamental/second-partial parallel reinforcement and attack transient protection, followed by the unchanged v0.3 Crystal Clarity. Earlier five engine modes, IDs, and audio behavior are preserved. New controls: Crystal Body Depth, Harmonic Density, Dynamic Transparency. Render all 6 modes using `sylenth2_render demos-compare --compare` or the focused five-way ablation with `sylenth2_render demos-study --study`. See [v0.4 Japanese DSP notes](docs/CRYSTAL_BODY_JA.md). Installer retains v0.3.1 locked-file `restartreplace` behavior.
+
+## Crystal v0.4.1 — naming transition
+
+The sound engine remains **bit-equivalent to Sylenth2 v0.4.0**. The physical VST3 bundle is now `Crystal typeGPT.vst3` while the DAW-visible JUCE `PLUGIN_NAME` is `Crystal typeGPT 0.4.1`. A new stable plugin identifier and separate installer AppId prevent accidental replacement of the historic `Sylenth2 Experimental.vst3`. Installer upgrades starting from this version are intended to replace `Crystal typeGPT.vst3` in place. The default DAW Engine selection is the user-preferred **Crystal Body**; all other modes remain selectable. On first install, the old Sylenth2 experimental VST3 remains installed and can be uninstalled separately after verification. The physical project name and plugin metadata were changed; the internal `sylenth2` namespace is retained temporarily. More: [Vision & migration (Japanese)](docs/CRYSTAL_VISION_JA.md).
