@@ -1,6 +1,6 @@
 # Crystal — Electronic Beauty Synthesizer (typeGPT research edition)
 
-**Crystal v0.4.1 — identity transition (DSP unchanged from v0.4.0)**
+**Prototype 0.4 / 2026-11-04**
 
 An independently written virtual-analog synthesizer experiment. **Sound signature: transparent, pure, clear, and harmonically full without becoming muddy.** This repository does **not** incorporate the previous Sylenth2 prototype, Sylenth1 code, or Panoramize source. Its current focus is a clear, crystalline electronic timbre with strong oscillator character.
 
@@ -59,16 +59,18 @@ Documentation: [Architecture (Japanese)](docs/ARCHITECTURE_JA.md).
 
 ## v0.3 Crystal Clarity
 
-New independent fifth mode for conservative high-frequency polish and subtle parallel resonance. The Original path and engine indices 0–3 are unchanged. Crystal Clarity and Transparent Resonance controls default to modest values, and both set to zero yields exact Original output. See [Crystal Clarity design (Japanese)](docs/CRYSTAL_CLARITY_JA.md). Use `sylenth2_render demos-compare --compare` to render 40 comparison WAVs.
+A fifth **Crystal Clarity** mode extends the original DSP with conservative time-adaptive high-frequency polishing and a parallel transparent resonance layer. The Original 0.1 path and the first four mode indices remain unchanged. The two new controls default to modest levels and bypass bit-identically when both are zero. For methodology and limits, see [Crystal Clarity (Japanese)](docs/CRYSTAL_CLARITY_JA.md).
 
-## v0.3.1 Installer-only hotfix
+Render five modes using `sylenth2_render demos-compare --compare` (40 WAV files total). Windows CI builds an EXE installer for in-place VST3 upgrades.
 
-Same Crystal Clarity audio DSP as v0.3.0. Inno Setup now uses restartreplace for VST3 files locked by Studio One or other hosts, prompting for a Windows restart if required. See [Japanese update troubleshooting](docs/INSTALL_TROUBLESHOOTING_JA.md). Always close the DAW before updating. This does not bypass permissions or security software.
+## v0.4 Crystal Body (research mode)
 
-## v0.4 Crystal Body
-
-Adds a sixth selectable engine with note-tracked fundamental/second-partial parallel reinforcement and attack transient protection, followed by the unchanged v0.3 Crystal Clarity. Earlier five engine modes, IDs, and audio behavior are preserved. New controls: Crystal Body Depth, Harmonic Density, Dynamic Transparency. Render all 6 modes using `sylenth2_render demos-compare --compare` or the focused five-way ablation with `sylenth2_render demos-study --study`. See [v0.4 Japanese DSP notes](docs/CRYSTAL_BODY_JA.md). Installer retains v0.3.1 locked-file `restartreplace` behavior.
+Adds a **sixth**, selectable `Crystal Body` engine with note-tracked low-partial reinforcement (fundamental and second harmonic), time-smoothed attack protection and the unchanged v0.3 Crystal Clarity stage. Original/Harmonic/Vocal/Fusion/CrystalClarity and their parameter IDs/engine indices remain unchanged. New parameters: Crystal Body Depth, Harmonic Density and Dynamic Transparency. `--study` generates 5 matched-MIDI ablation conditions per preset; `--compare` generates all six engine modes. See [v0.4 Japanese notes](docs/CRYSTAL_BODY_JA.md). CI generates Windows x64 VST3 and in-place upgrade EXE.
 
 ## Crystal v0.4.1 — naming transition
 
 The sound engine remains **bit-equivalent to Sylenth2 v0.4.0**. The physical VST3 bundle is now `Crystal typeGPT.vst3` while the DAW-visible JUCE `PLUGIN_NAME` is `Crystal typeGPT 0.4.1`. A new stable plugin identifier and separate installer AppId prevent accidental replacement of the historic `Sylenth2 Experimental.vst3`. Installer upgrades starting from this version are intended to replace `Crystal typeGPT.vst3` in place. The default DAW Engine selection is the user-preferred **Crystal Body**; all other modes remain selectable. On first install, the old Sylenth2 experimental VST3 remains installed and can be uninstalled separately after verification. The physical project name and plugin metadata were changed; the internal `sylenth2` namespace is retained temporarily. More: [Vision & migration (Japanese)](docs/CRYSTAL_VISION_JA.md).
+
+## Crystal Depth v0.5.0 - Four independent audio research axes
+
+Seventh, entirely optional Engine mode: **Crystal Depth**. The default remains the previously preferred **Crystal Body**; all six old mode indices are preserved. Core Focus, Harmonic Texture, Stereo Depth and Resonance Guard have independent controls. `--depth-study` renders Body 0.4 versus four single-axis ablations plus Depth All for each factory preset (48 WAVs). `--depth-raw` renders the same WAVs without per-file peak normalization for objective measurements. See [Crystal Depth methodology (Japanese)](docs/CRYSTAL_DEPTH_JA.md). Crystal version 0.5.0 is a research prototype, not yet a proof of improved perceived quality.

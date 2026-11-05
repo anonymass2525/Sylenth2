@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(Crystal VERSION 0.4.1 LANGUAGES C CXX)
+project(Crystal VERSION 0.5.0 LANGUAGES C CXX)
 
 option(SYLENTH2_BUILD_PLUGIN "Build JUCE VST3" OFF)
 option(SYLENTH2_BUILD_TOOLS "Build offline renderer" ON)
@@ -46,7 +46,7 @@ if(SYLENTH2_BUILD_PLUGIN)
         EDITOR_WANTS_KEYBOARD_FOCUS FALSE
         COPY_PLUGIN_AFTER_BUILD FALSE
         PRODUCT_NAME "Crystal typeGPT"
-        PLUGIN_NAME "Crystal typeGPT 0.4.1")
+        PLUGIN_NAME "Crystal typeGPT 0.5.0")
     target_sources(Crystal PRIVATE plugin/PluginProcessor.cpp)
     target_link_libraries(Crystal PRIVATE
         sylenth2_dsp

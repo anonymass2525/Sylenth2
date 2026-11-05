@@ -3,6 +3,7 @@
 #include "sylenth2/BeautyEngine.hpp"
 #include "sylenth2/CrystalClarity.hpp"
 #include "sylenth2/CrystalBody.hpp"
+#include "sylenth2/CrystalDepth.hpp"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -55,6 +56,11 @@ struct Patch {
     float bodyDensity = 0.52f;    // 0...1, relative second-harmonic body
     float bodyDynamics = 0.78f;   // 0...1, protect initial transients
     float crystalResonance = 0.38f; // 0...1, strictly parallel gentle resonance
+    // v0.5 experimental controls. Legacy 0..5 modes ignore all four.
+    float coreFocus = 0.58f;
+    float depthHarmonics = 0.45f;
+    float stereoDepth = 0.52f;
+    float resonanceGuard = 0.65f;
 };
 
 const std::array<Patch, 8>& factoryPatches();
@@ -111,6 +117,8 @@ private:
         std::array<Lane, maxUnison> a{}, b{};
         HarmonicVoice harmonic;
         CrystalBodyVoice body;
+        CrystalDepthVoice depth;
+        float overlap = 0.0f;
         int filterCounter = 0;
     };
     struct Bandpass {
@@ -121,6 +129,7 @@ private:
     };
 
     void tune(Voice& voice) noexcept;
+    void updateResonanceOverlaps() noexcept;
     static float waveSample(Wave wave, double phase, double step, float pulseWidth) noexcept;
     static float polyBlep(double t, double dt) noexcept;
     float chorusRead(const std::array<float, chorusSize>& buf, float delay) const noexcept;
@@ -141,6 +150,7 @@ private:
     float lastVowelKey_ = -1.0f;
     VocalBeauty beautyL_, beautyR_;
     CrystalClarity crystalL_, crystalR_;
+    CrystalStereoDepth depthStereo_;
     float beautyPhase_ = 0.0f;
     unsigned beautyCounter_ = 0;
 };

@@ -101,6 +101,7 @@ void Synth::prepare(double sampleRate) {
     delayL_.assign(static_cast<std::size_t>(sr_*2.0)+1,0.0f);
     delayR_.assign(delayL_.size(),0.0f);
     crystalL_.prepare(sr_); crystalR_.prepare(sr_);
+    depthStereo_.prepare(sr_);
     reset();
 }
 void Synth::reset() {
@@ -112,10 +113,12 @@ void Synth::reset() {
     pedal_=false; bend_=0.0f; age_=0; lastVowelKey_=-1.0f;
     beautyL_.reset(); beautyR_.reset(); beautyPhase_=0.0f; beautyCounter_=0;
     crystalL_.reset(); crystalR_.reset();
+    depthStereo_.reset();
     for(auto& f:vowelL_)f.clear();
     for(auto& f:vowelR_)f.clear();
 }
 void Synth::setPatch(const Patch& patch) noexcept {
+    const EngineMode oldMode=patch_.engineMode;
     patch_=patch;
     patch_.unisonA=std::clamp(patch_.unisonA,1,maxUnison);
     patch_.unisonB=std::clamp(patch_.unisonB,1,maxUnison);
@@ -135,7 +138,12 @@ void Synth::setPatch(const Patch& patch) noexcept {
     patch_.bodyDepth=clampf(patch_.bodyDepth,0.0f,1.0f);
     patch_.bodyDensity=clampf(patch_.bodyDensity,0.0f,1.0f);
     patch_.bodyDynamics=clampf(patch_.bodyDynamics,0.0f,1.0f);
+    patch_.coreFocus=clampf(patch_.coreFocus,0.0f,1.0f);
+    patch_.depthHarmonics=clampf(patch_.depthHarmonics,0.0f,1.0f);
+    patch_.stereoDepth=clampf(patch_.stereoDepth,0.0f,1.0f);
+    patch_.resonanceGuard=clampf(patch_.resonanceGuard,0.0f,1.0f);
     for(auto& v:voices_) if(v.amp.active()) tune(v);
+    if (patch_.engineMode==EngineMode::CrystalDepth && oldMode!=patch_.engineMode) updateResonanceOverlaps();
 }
 void Synth::tune(Voice& v) noexcept {
     const float base = midiHz(v.note)*std::exp2(bend_/6.0f);
@@ -154,7 +162,8 @@ void Synth::tune(Voice& v) noexcept {
     setup(v.a,patch_.unisonA,patch_.detuneA,0.0f);
     setup(v.b,patch_.unisonB,patch_.detuneB,patch_.octaveB);
     v.harmonic.configure(base,sr_,patch_.harmonicColor);
-    if (patch_.engineMode == EngineMode::CrystalBody) v.body.configure(base,sr_);
+    if (patch_.engineMode == EngineMode::CrystalBody || patch_.engineMode == EngineMode::CrystalDepth) v.body.configure(base,sr_);
+    if (patch_.engineMode == EngineMode::CrystalDepth) v.depth.configure(base,sr_);
 }
 void Synth::noteOn(int midiNote,float velocity) noexcept {
     if(midiNote<0 || midiNote>127 || velocity<=0) { if(velocity<=0)noteOff(midiNote); return; }
@@ -175,25 +184,49 @@ void Synth::noteOn(int midiNote,float velocity) noexcept {
     }
     dest->harmonic.phase=dest->a[0].phase;
     // Previous voice was value-initialized; body starts at zero on every note.
-    if (patch_.engineMode == EngineMode::CrystalBody) dest->body.reset();
+    if (patch_.engineMode == EngineMode::CrystalBody || patch_.engineMode == EngineMode::CrystalDepth) dest->body.reset();
+    if (patch_.engineMode == EngineMode::CrystalDepth) {dest->depth.reset();updateResonanceOverlaps();}
 }
 void Synth::noteOff(int midiNote) noexcept {
     for(auto& v:voices_) if(v.note==midiNote && v.amp.active() && v.amp.stage!=EnvStage::Release) {
         if(pedal_)v.heldByPedal=true;
         else {v.amp.off();v.filterEnv.off();}
     }
+    if(patch_.engineMode==EngineMode::CrystalDepth) updateResonanceOverlaps();
 }
 void Synth::sustainPedal(bool down) noexcept {
     if(pedal_ && !down) for(auto& v:voices_) if(v.heldByPedal) {v.heldByPedal=false;v.amp.off();v.filterEnv.off();}
     pedal_=down;
+    if(patch_.engineMode==EngineMode::CrystalDepth)updateResonanceOverlaps();
 }
 void Synth::pitchBend(float normalized) noexcept {
     bend_=clampf(normalized,-1,1);
     for(auto& v:voices_)if(v.amp.active())tune(v);
+    if(patch_.engineMode==EngineMode::CrystalDepth)updateResonanceOverlaps();
 }
 void Synth::allNotesOff() noexcept {
     for(auto& v:voices_){v.amp.off();v.filterEnv.off();v.heldByPedal=false;}
     pedal_=false;
+    if(patch_.engineMode==EngineMode::CrystalDepth)updateResonanceOverlaps();
+}
+void Synth::updateResonanceOverlaps() noexcept {
+    // Computed only for MIDI/patch changes, never for every audio sample.
+    // Compare note fundamentals and second partials using an ERB-scale
+    // distance. This is intentionally a simple interference heuristic.
+    for (auto& a:voices_) {
+        a.overlap=0.0f;
+        if (!a.amp.active() || a.amp.stage==EnvStage::Release)continue;
+        const float fa=midiHz(a.note)*std::exp2(bend_/6.0f);
+        for (const auto& b:voices_) {
+            if (&a==&b || !b.amp.active() || b.amp.stage==EnvStage::Release)continue;
+            const float fb=midiHz(b.note)*std::exp2(bend_/6.0f);
+            const float collision=std::max({partialOverlap(fa,fb),
+                0.55f*partialOverlap(2.0f*fa,fb),
+                0.55f*partialOverlap(fa,2.0f*fb),
+                0.35f*partialOverlap(2.0f*fa,2.0f*fb)});
+            a.overlap=std::max(a.overlap,collision);
+        }
+    }
 }
 float Synth::chorusRead(const std::array<float,chorusSize>& buf,float delay) const noexcept {
     float pos=static_cast<float>(chorusPos_)-delay;
@@ -211,7 +244,8 @@ void Synth::render(float* left,float* right,std::size_t frames) noexcept {
     const float delayMix=patch_.delay*0.34f;
     const bool hasHarmonics = patch_.engineMode==EngineMode::Harmonic || patch_.engineMode==EngineMode::Fusion;
     const bool hasVocal = patch_.engineMode==EngineMode::Vocal || patch_.engineMode==EngineMode::Fusion;
-    const bool hasBody = patch_.engineMode==EngineMode::CrystalBody;
+    const bool hasDepth = patch_.engineMode==EngineMode::CrystalDepth;
+    const bool hasBody = patch_.engineMode==EngineMode::CrystalBody || hasDepth;
     const bool hasCrystal = patch_.engineMode==EngineMode::CrystalClarity || hasBody;
     const std::size_t delaySamples=std::min(delayL_.size()-1,static_cast<std::size_t>(clampf(patch_.delaySeconds,0.05f,1.8f)*static_cast<float>(sr_)));
     const float vowelHz[5][2]={{760,1200},{530,1780},{310,2200},{570,920},{370,1000}};
@@ -261,7 +295,11 @@ void Synth::render(float* left,float* right,std::size_t frames) noexcept {
             }
             float voiceL=v.filterL.tick(xL);
             float voiceR=v.filterR.tick(xR);
-            if (hasBody) v.body.tick(voiceL,voiceR,patch_.bodyDepth,patch_.bodyDensity,patch_.bodyDynamics);
+            if (hasBody) {
+                const float guard=hasDepth ? (1.0f-0.60f*patch_.resonanceGuard*v.overlap) : 1.0f;
+                v.body.tick(voiceL,voiceR,patch_.bodyDepth*guard,patch_.bodyDensity,patch_.bodyDynamics);
+            }
+            if (hasDepth) v.depth.tick(voiceL,voiceR,patch_.coreFocus,patch_.depthHarmonics);
             l+=voiceL*amp*v.velocity*fScale;
             r+=voiceR*amp*v.velocity*fScale;
         }
@@ -287,6 +325,7 @@ void Synth::render(float* left,float* right,std::size_t frames) noexcept {
             l=crystalL_.tick(l,patch_.crystalClarity,patch_.crystalResonance);
             r=crystalR_.tick(r,patch_.crystalClarity,patch_.crystalResonance);
         }
+        if (hasDepth) depthStereo_.tick(l,r,patch_.stereoDepth);
         chorusL_[static_cast<std::size_t>(chorusPos_)]=l;
         chorusR_[static_cast<std::size_t>(chorusPos_)]=r;
         if(chorusMix>0.0001f){
