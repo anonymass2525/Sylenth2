@@ -190,5 +190,61 @@ int main() {
         x.render(xl.data(),xr.data(),xl.size());y.render(yl.data(),yr.data(),yl.size());
         for(std::size_t i=0;i<xl.size();++i){assert(xl[i]==yl[i]);assert(xr[i]==yr[i]);}
     }
-    std::cout<<"PASS: Original and Crystal Body preservation, seven modes, 4 independent depth effects, mono-safe stereo, 44.1/48/96/192 kHz\n";
+    // v0.6: all four controls off must be bit-for-bit the Crystal Body path.
+    for(double sr:{44100.0,48000.0,96000.0,192000.0})for(const auto& preset:patches) {
+        auto a=preset;a.engineMode=sylenth2::EngineMode::CrystalBody;
+        auto b=a;b.engineMode=sylenth2::EngineMode::CrystalPrecision;
+        b.precisionCore=b.precisionHarmonics=b.precisionSpace=b.precisionGuard=0.0f;
+        sylenth2::Synth x,y;x.prepare(sr);y.prepare(sr);x.setPatch(a);y.setPatch(b);
+        for(int note:{60,61,67}){x.noteOn(note,0.70f);y.noteOn(note,0.70f);}
+        std::array<float,256> xl{},xr{},yl{},yr{};
+        for(int block=0;block<16;++block){
+            x.render(xl.data(),xr.data(),xl.size());y.render(yl.data(),yr.data(),yl.size());
+            for(std::size_t i=0;i<xl.size();++i) { assert(xl[i]==yl[i]);assert(xr[i]==yr[i]); }
+        }
+    }
+    // Independent axes: each must be audible in the matching scenario and finite.
+    for(int axis=0;axis<4;++axis){
+        auto a=patches[0];a.engineMode=sylenth2::EngineMode::CrystalBody;
+        a.chorus=a.delay=0.0f;
+        auto b=a;b.engineMode=sylenth2::EngineMode::CrystalPrecision;
+        b.precisionCore=b.precisionHarmonics=b.precisionSpace=b.precisionGuard=0.0f;
+        if(axis==0)b.precisionCore=1.0f;
+        if(axis==1)b.precisionHarmonics=1.0f;
+        if(axis==2)b.precisionSpace=1.0f;
+        if(axis==3)b.precisionGuard=1.0f;
+        sylenth2::Synth x,y;x.prepare(48000.0);y.prepare(48000.0);x.setPatch(a);y.setPatch(b);
+        x.noteOn(60,0.72f);y.noteOn(60,0.72f);
+        if(axis==3){x.noteOn(61,0.68f);y.noteOn(61,0.68f);}
+        std::array<float,8192> xl{},xr{},yl{},yr{};
+        x.render(xl.data(),xr.data(),xl.size());y.render(yl.data(),yr.data(),yl.size());
+        double diff=0.0,midDiff=0.0,origPower=0.0,newPower=0.0;
+        for(std::size_t i=0;i<xl.size();++i){
+            assert(std::isfinite(yl[i])&&std::isfinite(yr[i]));
+            assert(std::abs(yl[i])<20.0f&&std::abs(yr[i])<20.0f);
+            diff+=std::abs(double(xl[i])-yl[i])+std::abs(double(xr[i])-yr[i]);
+            midDiff+=std::abs(double(xl[i]+xr[i])-double(yl[i]+yr[i]));
+            if(i>4096){origPower+=double(xl[i])*xl[i]+double(xr[i])*xr[i];
+                        newPower+=double(yl[i])*yl[i]+double(yr[i])*yr[i];}
+        }
+        assert(diff>0.0001);
+        if(axis==2) assert(midDiff<0.0003); // Side-only; dry mono sum is invariant.
+        if(axis==0 || axis==1){
+            const double db=10.0*std::log10((newPower+1e-12)/(origPower+1e-12));
+            assert(db>-1.0 && db<1.0); // bounded energy, not matched perceptual loudness.
+        }
+    }
+    // Guard-only must preserve a truly monophonic voice exactly.
+    {
+        auto a=patches[0];a.engineMode=sylenth2::EngineMode::CrystalBody;
+        auto b=a;b.engineMode=sylenth2::EngineMode::CrystalPrecision;
+        b.precisionCore=b.precisionHarmonics=b.precisionSpace=0.0f;
+        b.precisionGuard=1.0f;
+        sylenth2::Synth x,y;x.prepare(48000);y.prepare(48000);x.setPatch(a);y.setPatch(b);
+        x.noteOn(60,0.8f);y.noteOn(60,0.8f);
+        std::array<float,512> xl{},xr{},yl{},yr{};
+        x.render(xl.data(),xr.data(),xl.size());y.render(yl.data(),yr.data(),yl.size());
+        for(std::size_t i=0;i<xl.size();++i){assert(xl[i]==yl[i]);assert(xr[i]==yr[i]);}
+    }
+    std::cout<<"PASS: old 7 modes retained, v0.6 4-axis DSP and exact bypass, mono sum, 44.1/48/96/192kHz\n";
 }

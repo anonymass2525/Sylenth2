@@ -74,3 +74,7 @@ The sound engine remains **bit-equivalent to Sylenth2 v0.4.0**. The physical VST
 ## Crystal Depth v0.5.0 - Four independent audio research axes
 
 Seventh, entirely optional Engine mode: **Crystal Depth**. The default remains the previously preferred **Crystal Body**; all six old mode indices are preserved. Core Focus, Harmonic Texture, Stereo Depth and Resonance Guard have independent controls. `--depth-study` renders Body 0.4 versus four single-axis ablations plus Depth All for each factory preset (48 WAVs). `--depth-raw` renders the same WAVs without per-file peak normalization for objective measurements. See [Crystal Depth methodology (Japanese)](docs/CRYSTAL_DEPTH_JA.md). Crystal version 0.5.0 is a research prototype, not yet a proof of improved perceived quality.
+
+## Crystal v0.6.0 — Crystal Precision (experimental, selectable)
+
+Preserves all previous 7 engine modes and all previous parameter IDs. New independent DSP controls: Core Presence (note-tracked mid anchor with bounded RMS compensation), Partial Clarity (subtle third/fourth partial shaping), Front-Back Depth (filtered early Side reflection preserving the dry mono Mid), and Chord De-Masking (smoothed chord-overlap resonance protection). Initial Engine selection remains Crystal Body; all four new controls zero in Crystal Precision is bit-exact Crystal Body. Offline renderer supports `--precision-study`, `--precision-raw`, and `--precision-chords`. See [design and limitations (Japanese)](docs/CRYSTAL_PRECISION_JA.md).

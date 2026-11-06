@@ -43,8 +43,38 @@ int main(int argc,char** argv) {
         const bool compare=argc>2 && std::string(argv[2])=="--compare";
         const bool study=argc>2 && std::string(argv[2])=="--study";
         const bool depthStudy=argc>2 && (std::string(argv[2])=="--depth-study" || std::string(argv[2])=="--depth-raw");
-        const bool raw=argc>2 && std::string(argv[2])=="--depth-raw";
+        const bool raw=argc>2 && (std::string(argv[2])=="--depth-raw" || std::string(argv[2])=="--precision-raw");
         const bool chords=argc>2 && std::string(argv[2])=="--depth-chords";
+        const bool precisionStudy=argc>2 && (std::string(argv[2])=="--precision-study" || std::string(argv[2])=="--precision-raw");
+        const bool precisionChords=argc>2 && std::string(argv[2])=="--precision-chords";
+        if(precisionChords) {
+            constexpr int duration=5*sr;
+            constexpr std::array<std::array<int,3>,3> chords{{{{60,61,64}},{{48,60,67}},{{60,64,67}}}};
+            constexpr std::array<const char*,3> names{{"Adjacent","Octave","Triad"}};
+            constexpr std::array<const char*,3> versions{{"Body04","PrecisionGuardOnly","PrecisionAll"}};
+            for(std::size_t g=0;g<chords.size();++g)for(int k=0;k<3;++k) {
+                auto patch=sylenth2::factoryPatches()[0];
+                patch.chorus=patch.delay=0.0f;
+                patch.engineMode=(k==0)?sylenth2::EngineMode::CrystalBody:sylenth2::EngineMode::CrystalPrecision;
+                patch.precisionCore=patch.precisionHarmonics=patch.precisionSpace=patch.precisionGuard=0.0f;
+                if(k>=1)patch.precisionGuard=0.68f;
+                if(k==2){patch.precisionCore=0.60f;patch.precisionHarmonics=0.48f;patch.precisionSpace=0.54f;}
+                sylenth2::Synth synth;synth.prepare(sr);synth.setPatch(patch);
+                std::vector<float> l(duration),r(duration);
+                for(int i=0;i<duration;++i){
+                    if(i==0)for(int n:chords[g])synth.noteOn(n,0.68f);
+                    if(i==3*sr)for(int n:chords[g])synth.noteOff(n);
+                    synth.render(&l[static_cast<std::size_t>(i)],&r[static_cast<std::size_t>(i)],1);
+                }
+                float peak=0.0f;for(auto v:l)peak=std::max(peak,std::abs(v));
+                for(auto v:r)peak=std::max(peak,std::abs(v));
+                if(!std::isfinite(peak)||peak<=0.0f)return 2;
+                const float gain=0.70794578f/peak;
+                for(auto& v:l)v*=gain;for(auto& v:r)v*=gain;
+                wav(dir/(std::string(names[g])+"_"+versions[k]+".wav"),l,r,sr);
+            }
+            return 0;
+        }
         if(chords) {
             constexpr int chordLength=5*sr;
             constexpr std::array<std::array<int,3>,3> groups{{
@@ -84,7 +114,7 @@ int main(int argc,char** argv) {
             return 0;
         }
         for(const auto& original:sylenth2::factoryPatches()) {
-          for(int mode=0;mode<(compare?7:(study?5:(depthStudy?6:1)));++mode) {
+          for(int mode=0;mode<(compare?8:(study?5:(depthStudy?6:(precisionStudy?7:1))));++mode) {
             auto patch=original;
             if (study) {
                 // Dedicated controlled ablations: original, crystal, high-band only,
@@ -102,6 +132,14 @@ int main(int argc,char** argv) {
                 if(mode==3)patch.stereoDepth=0.52f;
                 if(mode==4)patch.resonanceGuard=0.65f;
                 if(mode==5){patch.coreFocus=0.58f;patch.depthHarmonics=0.45f;patch.stereoDepth=0.52f;patch.resonanceGuard=0.65f;}
+            } else if (precisionStudy) {
+                patch.engineMode=mode<2?static_cast<sylenth2::EngineMode>(mode==0?5:6):sylenth2::EngineMode::CrystalPrecision;
+                patch.precisionCore=patch.precisionHarmonics=patch.precisionSpace=patch.precisionGuard=0.0f;
+                if(mode==2)patch.precisionCore=0.60f;
+                if(mode==3)patch.precisionHarmonics=0.48f;
+                if(mode==4)patch.precisionSpace=0.54f;
+                if(mode==5)patch.precisionGuard=0.68f;
+                if(mode==6){patch.precisionCore=0.60f;patch.precisionHarmonics=0.48f;patch.precisionSpace=0.54f;patch.precisionGuard=0.68f;}
             } else patch.engineMode=static_cast<sylenth2::EngineMode>(mode);
             sylenth2::Synth synth;
             synth.prepare(sr);
@@ -121,9 +159,10 @@ int main(int argc,char** argv) {
             for(auto v:r)peak=std::max(peak,std::abs(v));
             std::string name=patch.name;
             std::replace(name.begin(),name.end(),' ','_');
-            if(compare)name += std::array<const char*,7>{"_Original","_Harmonic","_Vocal","_Fusion","_CrystalClarity","_CrystalBody","_CrystalDepth"}[static_cast<std::size_t>(mode)];
+            if(compare)name += std::array<const char*,8>{"_Original","_Harmonic","_Vocal","_Fusion","_CrystalClarity","_CrystalBody","_CrystalDepth","_CrystalPrecision"}[static_cast<std::size_t>(mode)];
             if(study)name += std::array<const char*,5>{"_Original","_CrystalClarity","_ClarityOnly","_ResonanceOnly","_CrystalBody"}[static_cast<std::size_t>(mode)];
             if(depthStudy)name += std::array<const char*,6>{"_Body04","_CoreOnly","_HarmonicOnly","_StereoOnly","_OverlapGuardOnly","_DepthAll"}[static_cast<std::size_t>(mode)];
+            if(precisionStudy)name += std::array<const char*,7>{"_Body04","_Depth05","_CoreOnly","_PartialOnly","_SpaceOnly","_GuardOnly","_PrecisionAll"}[static_cast<std::size_t>(mode)];
             const auto file=dir/(name+".wav");
             const float scaling=raw?1.0f:(peak>0.0f ? 0.70794578f/peak : 1.0f); // optional unnormalized depth raw
             for(auto& v:l)v*=scaling;

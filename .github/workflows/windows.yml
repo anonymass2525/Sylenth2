@@ -1,4 +1,4 @@
-name: Windows x64 VST3 + Crystal Depth 0.5
+name: Windows x64 VST3 + Crystal Precision 0.6
 on:
   push:
     branches: [main]
@@ -21,7 +21,7 @@ jobs:
       - name: Render 8 Original presets
         shell: pwsh
         run: .\build\Release\sylenth2_render.exe .\demos
-      - name: Render all seven modes including Crystal Depth
+      - name: Render eight modes including Crystal Precision
         shell: pwsh
         run: .\build\Release\sylenth2_render.exe .\demos-beauty --compare
       - name: Render v0.4 5-way transparent-body studies
@@ -33,6 +33,12 @@ jobs:
       - name: Render chord overlap research (clusters, octaves and triads)
         shell: pwsh
         run: .\build\Release\sylenth2_render.exe .\demos-chords --depth-chords
+      - name: Render v0.6 independent precision comparisons
+        shell: pwsh
+        run: .\build\Release\sylenth2_render.exe .\demos-precision --precision-study
+      - name: Render v0.6 chord de-masking experiments
+        shell: pwsh
+        run: .\build\Release\sylenth2_render.exe .\demos-precision-chords --precision-chords
       - name: Package VST3
         shell: pwsh
         run: |
@@ -70,7 +76,7 @@ jobs:
       - name: Upload Windows installer, VST3 and all WAV demos
         uses: actions/upload-artifact@v4
         with:
-          name: Crystal-typeGPT-v0.5.0-Windows-x64-Setup-and-Studies
+          name: Crystal-typeGPT-v0.6.0-Windows-x64-Setup-and-Studies
           path: |
             installer-output/*.exe
             package/**
@@ -79,4 +85,6 @@ jobs:
             demos-study/*.wav
             demos-depth/*.wav
             demos-chords/*.wav
+            demos-precision/*.wav
+            demos-precision-chords/*.wav
           retention-days: 90

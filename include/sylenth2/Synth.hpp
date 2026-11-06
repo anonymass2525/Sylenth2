@@ -4,6 +4,7 @@
 #include "sylenth2/CrystalClarity.hpp"
 #include "sylenth2/CrystalBody.hpp"
 #include "sylenth2/CrystalDepth.hpp"
+#include "sylenth2/CrystalPrecision.hpp"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -61,6 +62,11 @@ struct Patch {
     float depthHarmonics = 0.45f;
     float stereoDepth = 0.52f;
     float resonanceGuard = 0.65f;
+    // v0.6 only: existing 0..6 modes do not use these controls.
+    float precisionCore = 0.60f;
+    float precisionHarmonics = 0.48f;
+    float precisionSpace = 0.54f;
+    float precisionGuard = 0.68f;
 };
 
 const std::array<Patch, 8>& factoryPatches();
@@ -118,6 +124,7 @@ private:
         HarmonicVoice harmonic;
         CrystalBodyVoice body;
         CrystalDepthVoice depth;
+        CrystalPrecisionVoice precision;
         float overlap = 0.0f;
         int filterCounter = 0;
     };
@@ -151,6 +158,7 @@ private:
     VocalBeauty beautyL_, beautyR_;
     CrystalClarity crystalL_, crystalR_;
     CrystalStereoDepth depthStereo_;
+    CrystalPrecisionSpace precisionSpace_;
     float beautyPhase_ = 0.0f;
     unsigned beautyCounter_ = 0;
 };

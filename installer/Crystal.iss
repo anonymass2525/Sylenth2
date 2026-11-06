@@ -1,7 +1,7 @@
 ; Crystal typeGPT Windows x64 VST3 installer
 ; Retain v0.3.1 locked-file restart replacement fix.
 #ifndef MyAppVersion
-  #define MyAppVersion "0.5.0"
+  #define MyAppVersion "0.6.0"
 #endif
 #define MyAppName "Crystal typeGPT"
 #define VST3Bundle "Crystal typeGPT.vst3"

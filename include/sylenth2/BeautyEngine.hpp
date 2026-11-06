@@ -6,7 +6,7 @@
 
 namespace sylenth2 {
 
-enum class EngineMode : int { Original = 0, Harmonic = 1, Vocal = 2, Fusion = 3, CrystalClarity = 4, CrystalBody = 5, CrystalDepth = 6 };
+enum class EngineMode : int { Original = 0, Harmonic = 1, Vocal = 2, Fusion = 3, CrystalClarity = 4, CrystalBody = 5, CrystalDepth = 6, CrystalPrecision = 7 };
 
 // A separate, strictly band-limited 20-partial oscillator for the Harmonic mode.
 // We use a complex harmonic recurrence: just one sin/cos pair per output sample.
